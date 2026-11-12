@@ -1,0 +1,384 @@
+<Window x:Class="VideoPlayer.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Video Player" Icon="app.ico" Height="600" Width="960" MinWidth="560" MinHeight="360"
+        Background="Black" WindowStyle="None" AllowDrop="True" StateChanged="Window_StateChanged" Drop="Window_Drop"
+        KeyDown="Window_KeyDown" PreviewMouseLeftButtonUp="Window_PreviewMouseUp"
+        MouseMove="Window_MouseMove" FontFamily="{StaticResource UiFont}">
+    <WindowChrome.WindowChrome>
+        <WindowChrome CaptionHeight="0" ResizeBorderThickness="6" GlassFrameThickness="0"
+                      CornerRadius="0" UseAeroCaptionButtons="False"/>
+    </WindowChrome.WindowChrome>
+    <Window.Resources>
+        <SolidColorBrush x:Key="Accent" Color="#60CDFF"/>
+        <FontFamily x:Key="IconFont">Segoe MDL2 Assets, Segoe Fluent Icons</FontFamily>
+
+        <!-- Round, transparent icon button with a subtle hover/press highlight (Films & TV style) -->
+        <Style x:Key="IconButton" TargetType="Button">
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Focusable" Value="False"/>
+            <Setter Property="MinWidth" Value="58"/>
+            <Setter Property="Height" Value="58"/>
+            <Setter Property="Padding" Value="12,0"/>
+            <!-- Negative vertical margin keeps the row height (and so every position) unchanged -->
+            <Setter Property="Margin" Value="1,-5"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bg" CornerRadius="0" Background="Transparent"
+                                BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bg" Property="Background" Value="#33FFFFFF"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Bg" Property="Background" Value="#55FFFFFF"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="PlayButton" TargetType="Button" BasedOn="{StaticResource IconButton}">
+            <Setter Property="MinWidth" Value="70"/>
+            <Setter Property="Height" Value="70"/>
+            <Setter Property="BorderBrush" Value="White"/>
+            <Setter Property="BorderThickness" Value="2"/>
+            <Setter Property="Margin" Value="9,-5"/>
+        </Style>
+
+        <!-- Title-bar buttons -->
+        <Style x:Key="CaptionButton" TargetType="Button">
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Focusable" Value="False"/>
+            <Setter Property="Width" Value="46"/>
+            <Setter Property="Height" Value="32"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bg" Background="Transparent">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bg" Property="Background" Value="#33FFFFFF"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Bg" Property="Background" Value="#55FFFFFF"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="CloseButton" TargetType="Button" BasedOn="{StaticResource CaptionButton}">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bg" Background="Transparent">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bg" Property="Background" Value="#E81123"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Bg" Property="Background" Value="#F1707A"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Tall rectangular previous/next buttons on the sides of the video -->
+        <Style x:Key="SideButton" TargetType="Button">
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Focusable" Value="False"/>
+            <Setter Property="Width" Value="58"/>
+            <Setter Property="Height" Value="110"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bg" Background="#66000000">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bg" Property="Background" Value="#99000000"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Bg" Property="Background" Value="#CC000000"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Yellow trim handles on the timeline -->
+        <Style x:Key="TrimHandle" TargetType="Thumb">
+            <Setter Property="Width" Value="8"/>
+            <Setter Property="Height" Value="20"/>
+            <Setter Property="Cursor" Value="SizeWE"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Thumb">
+                        <Border Background="#FFD400" BorderBrush="Black" BorderThickness="1"/>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Slider pieces -->
+        <Style x:Key="FilledTrack" TargetType="RepeatButton">
+            <Setter Property="Focusable" Value="False"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RepeatButton">
+                        <Grid Background="Transparent">
+                            <Border Height="4" CornerRadius="2" Background="{StaticResource Accent}"/>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="EmptyTrack" TargetType="RepeatButton">
+            <Setter Property="Focusable" Value="False"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RepeatButton">
+                        <Grid Background="Transparent">
+                            <Border Height="4" CornerRadius="2" Background="#66FFFFFF"/>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="SeekThumb" TargetType="Thumb">
+            <Setter Property="Width" Value="14"/>
+            <Setter Property="Height" Value="14"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Thumb">
+                        <Ellipse Fill="White"/>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="SeekSlider" TargetType="Slider">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Slider">
+                        <Grid Height="24" Background="Transparent">
+                            <Track x:Name="PART_Track" VerticalAlignment="Center">
+                                <Track.DecreaseRepeatButton>
+                                    <RepeatButton Command="Slider.DecreaseLarge" Style="{StaticResource FilledTrack}"/>
+                                </Track.DecreaseRepeatButton>
+                                <Track.IncreaseRepeatButton>
+                                    <RepeatButton Command="Slider.IncreaseLarge" Style="{StaticResource EmptyTrack}"/>
+                                </Track.IncreaseRepeatButton>
+                                <Track.Thumb>
+                                    <Thumb Style="{StaticResource SeekThumb}"/>
+                                </Track.Thumb>
+                            </Track>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <Grid x:Name="Root">
+        <!-- Video frames from the modern Windows media engine (see ModernPlayer.cs) are drawn here -->
+        <Image x:Name="VideoImage" Stretch="Uniform" RenderOptions.BitmapScalingMode="Linear"/>
+
+        <StackPanel x:Name="Hint" HorizontalAlignment="Center" VerticalAlignment="Center" IsHitTestVisible="False">
+            <TextBlock Text="&#xE714;" FontFamily="{StaticResource IconFont}" FontSize="64"
+                       Foreground="#666" HorizontalAlignment="Center"/>
+            <TextBlock x:Name="HintText" Text="Open or drop a video file" Foreground="#888"
+                       FontSize="18" Margin="0,12,0,0" HorizontalAlignment="Center"
+                       TextAlignment="Center" TextWrapping="Wrap" MaxWidth="560"/>
+        </StackPanel>
+
+        <!-- Transparent layer over the whole video area (incl. black bars) for click / double-click -->
+        <Border x:Name="ClickLayer" Background="Transparent" MouseLeftButtonDown="Video_MouseDown"
+                MouseLeftButtonUp="Video_MouseUp" LostMouseCapture="Video_LostCapture"/>
+
+        <!-- Shown under the error text when a file can't be played: codec details + Store links -->
+        <StackPanel x:Name="CodecHelp" Visibility="Collapsed" HorizontalAlignment="Center"
+                    VerticalAlignment="Center" Margin="0,260,0,0" MaxWidth="560">
+            <TextBlock x:Name="CodecDetails" Foreground="#AAAAAA" FontSize="13" TextWrapping="Wrap"
+                       TextAlignment="Center" Margin="0,0,0,12"/>
+            <WrapPanel x:Name="CodecButtons" HorizontalAlignment="Center"/>
+        </StackPanel>
+
+        <!-- Previous / next video in the same folder (fade out with the controls) -->
+        <Grid x:Name="SideNav">
+            <Button x:Name="PrevBtn" Style="{StaticResource SideButton}" HorizontalAlignment="Left"
+                    Visibility="Collapsed" Click="PrevVideo_Click">
+                <TextBlock Text="&#xE76B;" FontFamily="{StaticResource IconFont}" FontSize="22"/>
+            </Button>
+            <Button x:Name="NextBtn" Style="{StaticResource SideButton}" HorizontalAlignment="Right"
+                    Visibility="Collapsed" Click="NextVideo_Click">
+                <TextBlock Text="&#xE76C;" FontFamily="{StaticResource IconFont}" FontSize="22"/>
+            </Button>
+        </Grid>
+
+        <!-- Translucent title bar, fades out with the controls -->
+        <Border x:Name="TopBar" VerticalAlignment="Top" MouseLeftButtonDown="TopBar_MouseDown">
+            <Border.Background>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                    <GradientStop Color="#CC000000" Offset="0"/>
+                    <GradientStop Color="#00000000" Offset="1"/>
+                </LinearGradientBrush>
+            </Border.Background>
+            <Grid Height="40">
+                <TextBlock Text="{Binding Title, RelativeSource={RelativeSource AncestorType=Window}}"
+                           Foreground="White" FontSize="13" VerticalAlignment="Top" Margin="16,9,160,0"
+                           TextTrimming="CharacterEllipsis" IsHitTestVisible="False"/>
+                <StackPanel x:Name="CaptionButtons" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top">
+                    <Button Style="{StaticResource CaptionButton}" Click="Minimize_Click" ToolTip="Minimize">
+                        <TextBlock Text="&#xE921;" FontFamily="{StaticResource IconFont}" FontSize="10"/>
+                    </Button>
+                    <Button Style="{StaticResource CaptionButton}" Click="Maximize_Click" ToolTip="Maximize / Restore">
+                        <TextBlock x:Name="MaxIcon" Text="&#xE922;" FontFamily="{StaticResource IconFont}" FontSize="10"/>
+                    </Button>
+                    <Button Style="{StaticResource CloseButton}" Click="Close_Click" ToolTip="Close">
+                        <TextBlock Text="&#xE8BB;" FontFamily="{StaticResource IconFont}" FontSize="10"/>
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Overlay controls, fades out while playing -->
+        <Border x:Name="ControlBar" VerticalAlignment="Bottom">
+            <Border.Background>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                    <GradientStop Color="#00000000" Offset="0"/>
+                    <GradientStop Color="#E6000000" Offset="1"/>
+                </LinearGradientBrush>
+            </Border.Background>
+            <StackPanel Margin="20,40,20,14">
+                <Grid x:Name="TrimPanel" Visibility="Collapsed" Margin="0,0,0,8">
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center">
+                        <TextBlock Text="TRIM" Foreground="#FFD400" FontWeight="SemiBold" FontSize="13" Margin="0,0,10,0"/>
+                        <TextBlock x:Name="TrimInfo" Foreground="White" FontSize="13"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                        <Button Style="{StaticResource TextButton}" Content="Set start  [" Click="SetTrimStart_Click"
+                                ToolTip="Set start to the current position ([ or I)"/>
+                        <Button Style="{StaticResource TextButton}" Content="Set end  ]" Click="SetTrimEnd_Click" Margin="6,0,0,0"
+                                ToolTip="Set end to the current position (] or O)"/>
+                        <Button Style="{StaticResource AccentButton}" Content="Export…" Click="TrimExport_Click" Margin="6,0,0,0"/>
+                        <Button Style="{StaticResource TextButton}" Content="Cancel" Click="TrimCancel_Click" Margin="6,0,0,0"/>
+                    </StackPanel>
+                </Grid>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock x:Name="CurrentTime" Text="0:00" Foreground="White" FontSize="13"
+                               VerticalAlignment="Center" Margin="0,0,12,0"/>
+                    <Grid Grid.Column="1" VerticalAlignment="Center">
+                        <Slider x:Name="SeekBar" Style="{StaticResource SeekSlider}"
+                                Minimum="0" Maximum="1" VerticalAlignment="Center"
+                                Focusable="False" IsMoveToPointEnabled="True"
+                                ValueChanged="Seek_ValueChanged"/>
+                        <Canvas x:Name="TrimOverlay" Visibility="Collapsed" SizeChanged="TrimOverlay_SizeChanged">
+                            <Rectangle x:Name="TrimRange" Height="4" Canvas.Top="10" Fill="#FFD400" IsHitTestVisible="False"/>
+                            <Thumb x:Name="TrimStartThumb" Style="{StaticResource TrimHandle}" Canvas.Top="2" ToolTip="Drag to set start"
+                                   DragStarted="TrimThumb_DragStarted" DragDelta="TrimStart_DragDelta"/>
+                            <Thumb x:Name="TrimEndThumb" Style="{StaticResource TrimHandle}" Canvas.Top="2" ToolTip="Drag to set end"
+                                   DragStarted="TrimThumb_DragStarted" DragDelta="TrimEnd_DragDelta"/>
+                        </Canvas>
+                    </Grid>
+                    <TextBlock x:Name="TotalTime" Grid.Column="2" Text="0:00" Foreground="White" FontSize="13"
+                               VerticalAlignment="Center" Margin="12,0,0,0"/>
+                </Grid>
+
+                <Grid Margin="0,6,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0" Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center">
+                        <Button x:Name="MuteBtn" Style="{StaticResource IconButton}" Click="Mute_Click"
+                                ToolTip="Mute / Unmute" Margin="-5,-5,-1,-5">
+                            <TextBlock x:Name="VolumeIcon" Text="&#xE767;" FontFamily="{StaticResource IconFont}" FontSize="18"/>
+                        </Button>
+                        <Slider x:Name="VolumeBar" Style="{StaticResource SeekSlider}" Width="100"
+                                Minimum="0" Maximum="1" Value="0.7" VerticalAlignment="Center"
+                                Focusable="False" IsMoveToPointEnabled="True"
+                                ValueChanged="Volume_ValueChanged" PreviewMouseWheel="Volume_Wheel"/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Button x:Name="FastRewindBtn" Style="{StaticResource IconButton}"
+                                PreviewMouseLeftButtonDown="FastRewind_Down" PreviewMouseLeftButtonUp="Fast_Up"
+                                LostMouseCapture="Fast_LostCapture" PreviewMouseWheel="FastRewind_Wheel"
+                                ToolTip="Hold to play backwards at this speed - scroll to change speed">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xE76B;" FontFamily="{StaticResource IconFont}" FontSize="14" VerticalAlignment="Center"/>
+                                <TextBlock Text="&#xE76B;" FontFamily="{StaticResource IconFont}" FontSize="14" VerticalAlignment="Center" Margin="-6,0,0,0"/>
+                                <TextBlock x:Name="FastRewindLabel" Text="x2" FontSize="16" Margin="8,0,0,0" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                        <Button x:Name="RewindBtn" Style="{StaticResource IconButton}" Click="Rewind_Click"
+                                PreviewMouseWheel="Rewind_Wheel" ToolTip="Rewind - scroll to change amount">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xE76B;" FontFamily="{StaticResource IconFont}" FontSize="14" VerticalAlignment="Center"/>
+                                <TextBlock x:Name="RewindLabel" Text="5" FontSize="16" Margin="8,0,0,0" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                        <Button x:Name="PlayBtn" Style="{StaticResource PlayButton}" Click="Play_Click" ToolTip="Play/Pause (Space)">
+                            <TextBlock x:Name="PlayIcon" Text="&#xE768;" FontFamily="{StaticResource IconFont}" FontSize="24"/>
+                        </Button>
+                        <Button x:Name="ForwardBtn" Style="{StaticResource IconButton}" Click="Forward_Click"
+                                PreviewMouseWheel="Forward_Wheel" ToolTip="Fast forward - scroll to change amount">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock x:Name="ForwardLabel" Text="5" FontSize="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="&#xE76C;" FontFamily="{StaticResource IconFont}" FontSize="14" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                        <Button x:Name="FastForwardBtn" Style="{StaticResource IconButton}"
+                                PreviewMouseLeftButtonDown="FastForward_Down" PreviewMouseLeftButtonUp="Fast_Up"
+                                LostMouseCapture="Fast_LostCapture" PreviewMouseWheel="FastForward_Wheel"
+                                ToolTip="Hold to play forwards at this speed - scroll to change speed">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock x:Name="FastForwardLabel" Text="x2" FontSize="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="&#xE76C;" FontFamily="{StaticResource IconFont}" FontSize="14" VerticalAlignment="Center"/>
+                                <TextBlock Text="&#xE76C;" FontFamily="{StaticResource IconFont}" FontSize="14" VerticalAlignment="Center" Margin="-6,0,0,0"/>
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                        <Button x:Name="OpenBtn" Style="{StaticResource IconButton}" Click="Open_Click" ToolTip="Open file (Ctrl+O)">
+                            <TextBlock Text="&#xE838;" FontFamily="{StaticResource IconFont}" FontSize="18"/>
+                        </Button>
+                        <Button x:Name="TrimBtn" Style="{StaticResource IconButton}" Click="Trim_Click" ToolTip="Trim and export (T)">
+                            <TextBlock x:Name="TrimIcon" Text="&#xE8C6;" FontFamily="{StaticResource IconFont}" FontSize="18"/>
+                        </Button>
+                        <Button x:Name="DeleteBtn" Style="{StaticResource IconButton}" Click="DeleteVideo_Click" ToolTip="Move video to Recycle Bin">
+                            <TextBlock Text="&#xE74D;" FontFamily="{StaticResource IconFont}" FontSize="18"/>
+                        </Button>
+                        <Button x:Name="FullBtn" Style="{StaticResource IconButton}" Click="Fullscreen_Click" ToolTip="Full screen (F11)">
+                            <TextBlock x:Name="FullIcon" Text="&#xE740;" FontFamily="{StaticResource IconFont}" FontSize="18"/>
+                        </Button>
+                    </StackPanel>
+                </Grid>
+            </StackPanel>
+        </Border>
+    </Grid>
+</Window>
